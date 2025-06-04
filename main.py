@@ -1,0 +1,1 @@
+print('Siemanko to jest test środowiska')
