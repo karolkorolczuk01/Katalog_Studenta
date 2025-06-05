@@ -1,4 +1,33 @@
-from tkinter import *
+from tkinter import * #do tworzenia roota
+import tkintermapview
+
+uczelnie: list =[]
+
+
+class Uczelnia: #definicja klasy - uczelnia
+    def __init__(self, nazwa, wojewodztwo):
+        self.nazwa = nazwa
+        self.wojewodztwo = wojewodztwo
+
+        #self.coordinates = self.get_coordinates()
+        #self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1],
+        #                                   text=f'{self.nazwa})
+
+    # def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
+    #     import requests
+    #     from bs4 import BeautifulSoup
+    #     adres_url: str = f'https://pl.wikipedia.org/wiki/{self.location}'
+    #     response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
+    #     return [
+    #         float(response_html.select('.latitude')[1].text.replace(',', '.')),
+    #         float(response_html.select('.longitude')[1].text.replace(',', '.')),
+    #     ]
+    #
+
+
+
+
+
 
 
 # Funkcja logowania
@@ -17,6 +46,29 @@ def zaloguj():
         entry_haslo.delete(0, END)
         Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz ponownie", fg="red").grid(row=1, column=0,
                                                                                              columnspan=5)
+
+
+
+
+def add_uczelnia() -> None:
+    nazwa = entry_nazwa_uczelni.get()
+    wojewodztwo = entry_wojewodztwo.get()
+
+    uczelnia = Uczelnia(nazwa=nazwa, wojewodztwo=wojewodztwo)
+    uczelnie.append(uczelnia)
+
+    entry_nazwa_uczelni.delete(0, END)
+    entry_wojewodztwo.delete(0, END)
+
+    entry_nazwa_uczelni.focus()
+    show_uczelnia()
+
+
+def show_uczelnia() -> None:
+    listbox_uczelnie.delete(0, END)
+    for idx, uczelnia in enumerate(uczelnie):
+        listbox_uczelnie.insert(idx, f'{idx + 1}. {uczelnia.nazwa}')
+
 
 
 root = Tk()
@@ -41,7 +93,7 @@ ramka_mapa = LabelFrame(root, text="🗺️ Mapa", padx=10, pady=10)
 
 ramka_logowanie.grid(row=0, column=0, columnspan=3, sticky="nsew")
 
-# Ukryj pozostałe ramki na start (nie dodawaj ich do grid jeszcze)
+# Ukryj pozostałe ramki na start (nie dodawaj ich do grid jeszcze jak nie jesteś zalogowany)
 ramka_uczelnie.grid_remove()
 ramka_pracownicy.grid_remove()
 ramka_studenci.grid_remove()
@@ -71,7 +123,8 @@ Label(ramka_uczelnie, text="Nazwa uczelni:").grid(row=2, column=0, sticky=W)
 entry_nazwa_uczelni = Entry(ramka_uczelnie)
 entry_nazwa_uczelni.grid(row=2, column=1, columnspan=3, sticky="ew")
 
-button_dodaj_uczelnie = Button(ramka_uczelnie, text="Dodaj").grid(row=4, column=0, sticky="ew")
+button_dodaj_uczelnie = Button(ramka_uczelnie, text="Dodaj", command=add_uczelnia)
+button_dodaj_uczelnie.grid(row=4, column=0, sticky="ew")
 button_usun_uczelnie = Button(ramka_uczelnie, text="Usuń").grid(row=4, column=1, sticky="ew")
 button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj").grid(row=4, column=2, sticky="ew")
 button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa").grid(row=4, column=3, sticky="ew")
