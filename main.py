@@ -1,8 +1,29 @@
 from tkinter import *
 
+
+# Funkcja logowania
+def zaloguj():
+    login = entry_login.get()
+    haslo = entry_haslo.get()
+
+    if login == "wat" and haslo == "wat":
+        ramka_logowanie.grid_remove()
+        ramka_uczelnie.grid(row=1, column=0, sticky="nsew")
+        ramka_pracownicy.grid(row=1, column=1, sticky="nsew")
+        ramka_studenci.grid(row=1, column=2, sticky="nsew")
+        ramka_mapa.grid(row=3, column=0, columnspan=3, sticky="nsew")
+    else:
+        entry_login.delete(0, END)
+        entry_haslo.delete(0, END)
+        Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz ponownie", fg="red").grid(row=1, column=0,
+                                                                                             columnspan=5)
+
+
 root = Tk()
 root.geometry("1400x800")
 root.title('StudentBook')
+
+from tkinter import *
 
 # Konfiguracja siatki (dynamiczne rozciąganie)
 root.columnconfigure(0, weight=1)
@@ -11,7 +32,7 @@ root.columnconfigure(2, weight=1)
 root.rowconfigure(1, weight=1)
 root.rowconfigure(3, weight=1)
 
-# RANKI
+# RAMKI
 ramka_logowanie = LabelFrame(root, text="🔐 Panel logowania", padx=10, pady=10)
 ramka_uczelnie = LabelFrame(root, text="🏫 Uczelnie", padx=10, pady=10)
 ramka_pracownicy = LabelFrame(root, text="👨‍🏫 Pracownicy", padx=10, pady=10)
@@ -19,12 +40,12 @@ ramka_studenci = LabelFrame(root, text="🎓 Studenci", padx=10, pady=10)
 ramka_mapa = LabelFrame(root, text="🗺️ Mapa", padx=10, pady=10)
 
 ramka_logowanie.grid(row=0, column=0, columnspan=3, sticky="nsew")
-ramka_uczelnie.grid(row=1, column=0, sticky="nsew")
-ramka_pracownicy.grid(row=1, column=1, sticky="nsew")
-ramka_studenci.grid(row=1, column=2, sticky="nsew")
-ramka_mapa.grid(row=3, column=0, columnspan=3, sticky="nsew")
 
-
+# Ukryj pozostałe ramki na start (nie dodawaj ich do grid jeszcze)
+ramka_uczelnie.grid_remove()
+ramka_pracownicy.grid_remove()
+ramka_studenci.grid_remove()
+ramka_mapa.grid_remove()
 
 # LOGOWANIE
 Label(ramka_logowanie, text="Login: ").grid(row=0, column=0)
@@ -35,10 +56,8 @@ Label(ramka_logowanie, text="Hasło: ").grid(row=0, column=2)
 entry_haslo = Entry(ramka_logowanie, show="*")
 entry_haslo.grid(row=0, column=3, sticky="ew", padx=5)
 
-button_zaloguj = Button(ramka_logowanie, text="Zaloguj")
+button_zaloguj = Button(ramka_logowanie, text="Zaloguj", command=zaloguj)
 button_zaloguj.grid(row=0, column=4, padx=10)
-
-
 
 # UCZELNIE
 listbox_uczelnie = Listbox(ramka_uczelnie, width=70, height=8)
@@ -56,8 +75,6 @@ button_dodaj_uczelnie = Button(ramka_uczelnie, text="Dodaj").grid(row=4, column=
 button_usun_uczelnie = Button(ramka_uczelnie, text="Usuń").grid(row=4, column=1, sticky="ew")
 button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj").grid(row=4, column=2, sticky="ew")
 button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa").grid(row=4, column=3, sticky="ew")
-
-
 
 # PRACOWNICY
 listbox_pracownicy = Listbox(ramka_pracownicy, width=70, height=8)
@@ -79,8 +96,6 @@ button_dodaj_pracownicy = Button(ramka_pracownicy, text="Dodaj").grid(row=5, col
 button_usun_pracownicy = Button(ramka_pracownicy, text="Usuń").grid(row=5, column=1, sticky="ew")
 button_aktualizuj_pracownicy = Button(ramka_pracownicy, text="Aktualizuj").grid(row=5, column=2, sticky="ew")
 button_mapa_pracownicy = Button(ramka_pracownicy, text="Mapa").grid(row=5, column=3, sticky="ew")
-
-
 
 # STUDENCI
 listbox_studenci = Listbox(ramka_studenci, width=70, height=8)
