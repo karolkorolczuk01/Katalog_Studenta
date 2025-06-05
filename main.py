@@ -47,9 +47,6 @@ def zaloguj():
         Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz ponownie", fg="red").grid(row=1, column=0,
                                                                                              columnspan=5)
 
-
-
-
 def add_uczelnia() -> None:
     nazwa = entry_nazwa_uczelni.get()
     wojewodztwo = entry_wojewodztwo.get()
@@ -63,11 +60,52 @@ def add_uczelnia() -> None:
     entry_nazwa_uczelni.focus()
     show_uczelnia()
 
-
 def show_uczelnia() -> None:
     listbox_uczelnie.delete(0, END)
     for idx, uczelnia in enumerate(uczelnie):
         listbox_uczelnie.insert(idx, f'{idx + 1}. {uczelnia.nazwa}')
+
+def remove_uczelnia() -> None:
+    i = listbox_uczelnie.index(ACTIVE)
+    #print(i)
+    #uczelnie[i].marker.delete()
+    uczelnie.pop(i)
+    show_uczelnia()
+
+def edit_uczelnia() -> None:
+    i = listbox_uczelnie.index(ACTIVE)
+    wojewodztwo = uczelnie[i].wojewodztwo
+    nazwa = uczelnie[i].nazwa
+
+
+    entry_wojewodztwo.insert(0, wojewodztwo)
+    entry_nazwa_uczelni.insert(0, nazwa)
+
+    button_aktualizuj_uczelnie.configure(text='Zapisz', command=lambda: update_uczelnia(i))
+
+def update_uczelnia(i):
+    nazwa = entry_nazwa_uczelni.get()
+    wojewodztwo = entry_wojewodztwo.get()
+
+    uczelnie[i].nazwa = nazwa
+    uczelnie[i].wojewodztwo = wojewodztwo
+
+    # uczelnie[i].coordinates = users[i].get_coordinates()
+    # uczelnie[i].marker.delete()
+    # czelnie[i].marker = map_widget.set_marker(uczelnie[i].coordinates[0], uczelnie[i].coordinates[1],
+    #                                         text=f'{uczelnie[i].nazwa}}')
+
+    show_uczelnia()
+    button_aktualizuj_uczelnie.configure(text='Aktualizuj', command=add_uczelnia)  # zmiana właściwosci przycisku
+
+    entry_nazwa_uczelni.delete(0, END)
+    entry_wojewodztwo.delete(0, END)
+
+
+    entry_wojewodztwo.focus()
+
+
+
 
 
 
@@ -125,8 +163,10 @@ entry_nazwa_uczelni.grid(row=2, column=1, columnspan=3, sticky="ew")
 
 button_dodaj_uczelnie = Button(ramka_uczelnie, text="Dodaj", command=add_uczelnia)
 button_dodaj_uczelnie.grid(row=4, column=0, sticky="ew")
-button_usun_uczelnie = Button(ramka_uczelnie, text="Usuń").grid(row=4, column=1, sticky="ew")
-button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj").grid(row=4, column=2, sticky="ew")
+button_usun_uczelnie = Button(ramka_uczelnie, text="Usuń", command=remove_uczelnia)
+button_usun_uczelnie.grid(row=4, column=1, sticky="ew")
+button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj", command=edit_uczelnia)
+button_aktualizuj_uczelnie .grid(row=4, column=2, sticky="ew")
 button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa").grid(row=4, column=3, sticky="ew")
 
 # PRACOWNICY
