@@ -2,6 +2,8 @@ from tkinter import * #do tworzenia roota
 import tkintermapview
 
 uczelnie: list =[]
+pracownicy: list =[]
+studenci: list =[]
 
 
 class Uczelnia: #definicja klasy - uczelnia
@@ -24,6 +26,26 @@ class Uczelnia: #definicja klasy - uczelnia
     #     ]
     #
 
+class Pracownik: #definicja klasy - uczelnia
+    def __init__(self, imie_nazwisko_pracownika, powiat, uczelnia):
+        self.imie_nazwisko_pracownika = imie_nazwisko_pracownika
+        self.powiat = powiat
+        self.uczelnia = uczelnia
+
+        #self.coordinates = self.get_coordinates()
+        #self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1],
+        #                                   text=f'{self.nazwa})
+
+    # def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
+    #     import requests
+    #     from bs4 import BeautifulSoup
+    #     adres_url: str = f'https://pl.wikipedia.org/wiki/{self.location}'
+    #     response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
+    #     return [
+    #         float(response_html.select('.latitude')[1].text.replace(',', '.')),
+    #         float(response_html.select('.longitude')[1].text.replace(',', '.')),
+    #     ]
+    #
 
 
 
@@ -44,7 +66,7 @@ def zaloguj():
     else:
         entry_login.delete(0, END)
         entry_haslo.delete(0, END)
-        Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz ponownie", fg="red").grid(row=1, column=0,
+        Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz pon ownie", fg="red").grid(row=1, column=0,
                                                                                              columnspan=5)
 
 def add_uczelnia() -> None:
@@ -104,6 +126,70 @@ def update_uczelnia(i):
 
     entry_wojewodztwo.focus()
 
+def add_pracownik() -> None:
+    imie_nazwisko_pracownik = entry_pracownik.get()
+    powiat_pracownik = entry_powiat.get()
+    uczelnia_pracownik = entry_uczelnia_dla_pracownika.get()
+
+
+    pracownik = Pracownik(imie_nazwisko_pracownika=imie_nazwisko_pracownik, powiat=powiat_pracownik, uczelnia=uczelnia_pracownik)
+    pracownicy.append(pracownik)
+
+    entry_pracownik.delete(0, END)
+    entry_powiat.delete(0, END)
+    entry_uczelnia_dla_pracownika.delete(0, END)
+
+    entry_pracownik.focus()
+    show_pracownik()
+
+def show_pracownik() -> None:
+    listbox_pracownicy.delete(0, END)
+    for idx, pracownik in enumerate(pracownicy):
+        listbox_pracownicy.insert(idx, f'{idx + 1}. {pracownik.imie_nazwisko_pracownika}')
+
+def remove_pracownik() -> None:
+    i = listbox_pracownicy.index(ACTIVE)
+    # print(i)
+    # uczelnie[i].marker.delete()
+    pracownicy.pop(i)
+    show_pracownik()
+
+def edit_pracownik() -> None:
+    i = listbox_pracownicy.index(ACTIVE)
+    imie_nazwisko = pracownicy[i].imie_nazwisko_pracownika
+    powiat = pracownicy[i].powiat
+    uczelnia = pracownicy[i].uczelnia
+
+
+    entry_powiat.insert(0, powiat)
+    entry_pracownik.insert(0, imie_nazwisko)
+    entry_uczelnia_dla_pracownika.insert(0, uczelnia)
+
+    button_aktualizuj_pracownicy.configure(text='Zapisz', command=lambda: update_pracownik(i))
+
+def update_pracownik(i):
+    imie_nazwisko = entry_pracownik.get()
+    powiat = entry_powiat.get()
+    uczelnia = entry_uczelnia_dla_pracownika.get()
+
+    pracownicy[i].imie_nazwisko = imie_nazwisko
+    pracownicy[i].powiat = powiat
+    pracownicy[i].uczelnia = uczelnia
+
+    # uczelnie[i].coordinates = users[i].get_coordinates()
+    # uczelnie[i].marker.delete()
+    # czelnie[i].marker = map_widget.set_marker(uczelnie[i].coordinates[0], uczelnie[i].coordinates[1],
+    #                                         text=f'{uczelnie[i].nazwa}}')
+
+    show_pracownik()
+    button_aktualizuj_pracownicy.configure(text='Aktualizuj', command=add_pracownik)  # zmiana właściwosci przycisku
+
+    entry_pracownik.delete(0, END)
+    entry_powiat.delete(0, END)
+    entry_uczelnia_dla_pracownika.delete(0, END)
+
+
+    entry_pracownik.focus()
 
 
 
@@ -185,9 +271,12 @@ Label(ramka_pracownicy, text="Imię i nazwisko:").grid(row=3, column=0, sticky=W
 entry_pracownik = Entry(ramka_pracownicy)
 entry_pracownik.grid(row=3, column=1, columnspan=3, sticky="ew")
 
-button_dodaj_pracownicy = Button(ramka_pracownicy, text="Dodaj").grid(row=5, column=0, sticky="ew")
-button_usun_pracownicy = Button(ramka_pracownicy, text="Usuń").grid(row=5, column=1, sticky="ew")
-button_aktualizuj_pracownicy = Button(ramka_pracownicy, text="Aktualizuj").grid(row=5, column=2, sticky="ew")
+button_dodaj_pracownicy = Button(ramka_pracownicy, text="Dodaj",command=add_pracownik)
+button_dodaj_pracownicy.grid(row=5, column=0, sticky="ew")
+button_usun_pracownicy = Button(ramka_pracownicy, text="Usuń",command=remove_pracownik)
+button_usun_pracownicy.grid(row=5, column=1, sticky="ew")
+button_aktualizuj_pracownicy = Button(ramka_pracownicy, text="Aktualizuj", command=edit_pracownik)
+button_aktualizuj_pracownicy.grid(row=5, column=2, sticky="ew")
 button_mapa_pracownicy = Button(ramka_pracownicy, text="Mapa").grid(row=5, column=3, sticky="ew")
 
 # STUDENCI
