@@ -47,6 +47,27 @@ class Pracownik: #definicja klasy - uczelnia
     #     ]
     #
 
+class Student: #definicja klasy - uczelnia
+    def __init__(self, imie_nazwisko_studenta, grupa, uczelnia_studenta):
+        self.imie_nazwisko_studenta = imie_nazwisko_studenta
+        self.grupa = grupa
+        self.uczelnia_studenta = uczelnia_studenta
+
+        #self.coordinates = self.get_coordinates()
+        #self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1],
+        #                                   text=f'{self.nazwa})
+
+    # def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
+    #     import requests
+    #     from bs4 import BeautifulSoup
+    #     adres_url: str = f'https://pl.wikipedia.org/wiki/{self.location}'
+    #     response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
+    #     return [
+    #         float(response_html.select('.latitude')[1].text.replace(',', '.')),
+    #         float(response_html.select('.longitude')[1].text.replace(',', '.')),
+    #     ]
+    #
+
 
 
 
@@ -118,7 +139,7 @@ def update_uczelnia(i):
     #                                         text=f'{uczelnie[i].nazwa}}')
 
     show_uczelnia()
-    button_aktualizuj_uczelnie.configure(text='Aktualizuj', command=add_uczelnia)  # zmiana właściwosci przycisku
+    button_aktualizuj_uczelnie.configure(text='Aktualizuj', command=edit_uczelnia)  # zmiana właściwosci przycisku
 
     entry_nazwa_uczelni.delete(0, END)
     entry_wojewodztwo.delete(0, END)
@@ -161,6 +182,7 @@ def edit_pracownik() -> None:
     uczelnia = pracownicy[i].uczelnia
 
 
+
     entry_powiat.insert(0, powiat)
     entry_pracownik.insert(0, imie_nazwisko)
     entry_uczelnia_dla_pracownika.insert(0, uczelnia)
@@ -172,7 +194,7 @@ def update_pracownik(i):
     powiat = entry_powiat.get()
     uczelnia = entry_uczelnia_dla_pracownika.get()
 
-    pracownicy[i].imie_nazwisko = imie_nazwisko
+    pracownicy[i].imie_nazwisko_pracownika = imie_nazwisko
     pracownicy[i].powiat = powiat
     pracownicy[i].uczelnia = uczelnia
 
@@ -182,7 +204,7 @@ def update_pracownik(i):
     #                                         text=f'{uczelnie[i].nazwa}}')
 
     show_pracownik()
-    button_aktualizuj_pracownicy.configure(text='Aktualizuj', command=add_pracownik)  # zmiana właściwosci przycisku
+    button_aktualizuj_pracownicy.configure(text='Aktualizuj', command=edit_pracownik)  # zmiana właściwosci przycisku
 
     entry_pracownik.delete(0, END)
     entry_powiat.delete(0, END)
