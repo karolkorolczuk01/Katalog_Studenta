@@ -1,5 +1,6 @@
 from tkinter import * #do tworzenia roota
 import tkintermapview
+from graphviz.backend.dot_command import command
 
 uczelnie: list =[]
 pracownicy: list =[]
@@ -10,21 +11,19 @@ class Uczelnia: #definicja klasy - uczelnia
     def __init__(self, nazwa, wojewodztwo):
         self.nazwa = nazwa
         self.wojewodztwo = wojewodztwo
+        self.coordinates = self.get_coordinates()
+        self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1], text=f'{self.nazwa}')
 
-        #self.coordinates = self.get_coordinates()
-        #self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1],
-        #                                   text=f'{self.nazwa})
+    def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
+         import requests
+         from bs4 import BeautifulSoup
+         adres_url: str = f'https://pl.wikipedia.org/wiki/{self.nazwa}'
+         response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
+         return [
+             float(response_html.select('.latitude')[1].text.replace(',', '.')),
+             float(response_html.select('.longitude')[1].text.replace(',', '.')),
+         ]
 
-    # def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
-    #     import requests
-    #     from bs4 import BeautifulSoup
-    #     adres_url: str = f'https://pl.wikipedia.org/wiki/{self.location}'
-    #     response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
-    #     return [
-    #         float(response_html.select('.latitude')[1].text.replace(',', '.')),
-    #         float(response_html.select('.longitude')[1].text.replace(',', '.')),
-    #     ]
-    #
 
 class Pracownik: #definicja klasy - uczelnia
     def __init__(self, imie_nazwisko_pracownika, powiat, uczelnia):
@@ -110,8 +109,8 @@ def show_uczelnia() -> None:
 
 def remove_uczelnia() -> None:
     i = listbox_uczelnie.index(ACTIVE)
-    #print(i)
-    #uczelnie[i].marker.delete()
+    print(i)
+    uczelnie[i].marker.delete()
     uczelnie.pop(i)
     show_uczelnia()
 
@@ -133,10 +132,9 @@ def update_uczelnia(i):
     uczelnie[i].nazwa = nazwa
     uczelnie[i].wojewodztwo = wojewodztwo
 
-    # uczelnie[i].coordinates = users[i].get_coordinates()
-    # uczelnie[i].marker.delete()
-    # czelnie[i].marker = map_widget.set_marker(uczelnie[i].coordinates[0], uczelnie[i].coordinates[1],
-    #                                         text=f'{uczelnie[i].nazwa}}')
+    uczelnie[i].coordinates = uczelnie[i].get_coordinates()
+    uczelnie[i].marker.delete()
+    uczelnie[i].marker = map_widget.set_marker(uczelnie[i].coordinates[0], uczelnie[i].coordinates[1],text=f'{uczelnie[i].nazwa}')
 
     show_uczelnia()
     button_aktualizuj_uczelnie.configure(text='Aktualizuj', command=edit_uczelnia)  # zmiana właściwosci przycisku
@@ -213,6 +211,73 @@ def update_pracownik(i):
 
     entry_pracownik.focus()
 
+def add_student() -> None:
+    imie_nazwisko = entry_student.get()
+    grupa = entry_grupa.get()
+    uczelnia = entry_uczelnia_studenci.get()
+
+    student = Student(imie_nazwisko_studenta=imie_nazwisko, grupa=grupa, uczelnia_studenta=uczelnia)
+    studenci.append(student)
+
+    entry_student.delete(0, END)
+    entry_grupa.delete(0, END)
+    entry_uczelnia_studenci.delete(0, END)
+
+    entry_student.focus()
+    show_students()
+
+def show_students() -> None:
+    listbox_studenci.delete(0, END)
+    for idx, student in enumerate(studenci):
+        listbox_studenci.insert(idx, f'{idx + 1}. {student.imie_nazwisko_studenta}')
+
+def remove_student() -> None:
+    i = listbox_studenci.index(ACTIVE)
+    studenci.pop(i)
+    show_students()
+
+def edit_student() -> None:
+    i = listbox_studenci.index(ACTIVE)
+    student = studenci[i]
+
+    entry_student.insert(0, student.imie_nazwisko_studenta)
+    entry_grupa.insert(0, student.grupa)
+    entry_uczelnia_studenci.insert(0, student.uczelnia_studenta)
+
+    button_aktualizuj_studenci.configure(text='Zapisz', command=lambda: update_student(i))
+
+def update_student(i) -> None:
+    imie_nazwisko = entry_student.get()
+    grupa = entry_grupa.get()
+    uczelnia = entry_uczelnia_studenci.get()
+
+    studenci[i].imie_nazwisko_studenta = imie_nazwisko
+    studenci[i].grupa = grupa
+    studenci[i].uczelnia_studenta = uczelnia
+
+    show_students()
+    button_aktualizuj_studenci.configure(text='Aktualizuj', command=edit_student)
+
+    entry_student.delete(0, END)
+    entry_grupa.delete(0, END)
+    entry_uczelnia_studenci.delete(0, END)
+
+    entry_student.focus()
+
+
+def pokaz_uczelnia_na_mapie():
+    wojewodztwo_wpisane = entry_wojewodztwo_zapytanie.get().strip().lower()
+    if not wojewodztwo_wpisane:
+        return
+
+    for uczelnia in uczelnie:
+        # Sprawdź, czy wojewodztwo uczelni zgadza się (ignorując wielkość liter)
+        if uczelnia.wojewodztwo.lower() == wojewodztwo_wpisane:
+            # Zmień kolor markera na czerwony (lub inny wyróżniający)
+            uczelnia.marker.set_marker_color("red")
+        else:
+            # Przywróć domyślny kolor (niebieski)
+            uczelnia.marker.set_marker_color("blue")
 
 
 
@@ -269,13 +334,18 @@ Label(ramka_uczelnie, text="Nazwa uczelni:").grid(row=2, column=0, sticky=W)
 entry_nazwa_uczelni = Entry(ramka_uczelnie)
 entry_nazwa_uczelni.grid(row=2, column=1, columnspan=3, sticky="ew")
 
+Label(ramka_uczelnie, text="Z którego województwa wyswietlić?").grid(row=5, column=0, sticky=W)
+entry_wojewodztwo_zapytanie = Entry(ramka_uczelnie)
+entry_wojewodztwo_zapytanie.grid(row=5, column=1, columnspan=3, sticky="ew")
+
 button_dodaj_uczelnie = Button(ramka_uczelnie, text="Dodaj", command=add_uczelnia)
 button_dodaj_uczelnie.grid(row=4, column=0, sticky="ew")
 button_usun_uczelnie = Button(ramka_uczelnie, text="Usuń", command=remove_uczelnia)
 button_usun_uczelnie.grid(row=4, column=1, sticky="ew")
 button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj", command=edit_uczelnia)
 button_aktualizuj_uczelnie .grid(row=4, column=2, sticky="ew")
-button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa").grid(row=4, column=3, sticky="ew")
+button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa",command=pokaz_uczelnia_na_mapie)
+button_mapa_uczelnie.grid(row=6, column=3, sticky="ew")
 
 # PRACOWNICY
 listbox_pracownicy = Listbox(ramka_pracownicy, width=70, height=8)
@@ -317,12 +387,20 @@ Label(ramka_studenci, text="Imię i nazwisko:").grid(row=3, column=0, sticky=W)
 entry_student = Entry(ramka_studenci)
 entry_student.grid(row=3, column=1, columnspan=3, sticky="ew")
 
-Button_dodaj_studenci = Button(ramka_studenci, text="Dodaj").grid(row=4, column=0, sticky="ew")
-Button_usun_studenci = Button(ramka_studenci, text="Usuń").grid(row=4, column=1, sticky="ew")
-Button_aktualizuj_studenci = Button(ramka_studenci, text="Aktualizuj").grid(row=4, column=2, sticky="ew")
-Button_mapa_studenci = Button(ramka_studenci, text="Mapa").grid(row=4, column=3, sticky="ew")
+button_dodaj_studenci = Button(ramka_studenci, text="Dodaj", command=add_student)
+button_dodaj_studenci.grid(row=4, column=0, sticky="ew")
+button_usun_studenci = Button(ramka_studenci, text="Usuń", command=remove_student)
+button_usun_studenci.grid(row=4, column=1, sticky="ew")
+button_aktualizuj_studenci = Button(ramka_studenci, text="Aktualizuj", command=edit_student)
+button_aktualizuj_studenci.grid(row=4, column=2, sticky="ew")
+button_mapa_studenci = Button(ramka_studenci, text="Mapa").grid(row=4, column=3, sticky="ew")
 
 # MAPA
-Label(ramka_mapa, text="Tu mogłaby być mapa lub wizualizacja współrzędnych...").pack(expand=True)
+
+
+map_widget = tkintermapview.TkinterMapView(ramka_mapa, width=1400, height=450, corner_radius=0)
+map_widget.grid(row=0, column=0, columnspan=2)
+map_widget.set_position(52.23, 21.0)
+map_widget.set_zoom(6)
 
 root.mainloop()
