@@ -30,21 +30,18 @@ class Pracownik: #definicja klasy - uczelnia
         self.imie_nazwisko_pracownika = imie_nazwisko_pracownika
         self.powiat = powiat
         self.uczelnia = uczelnia
+        self.coordinates = self.get_coordinates()
+        self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1], text=f'{self.imie_nazwisko_pracownika}', marker_color_circle="green")
+    def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
+        import requests
+        from bs4 import BeautifulSoup
+        adres_url: str = f'https://pl.wikipedia.org/wiki/Powiat_{self.powiat}'
+        response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
+        return [
+         float(response_html.select('.latitude')[1].text.replace(',', '.')),
+         float(response_html.select('.longitude')[1].text.replace(',', '.')),
+         ]
 
-        #self.coordinates = self.get_coordinates()
-        #self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1],
-        #                                   text=f'{self.nazwa})
-
-    # def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
-    #     import requests
-    #     from bs4 import BeautifulSoup
-    #     adres_url: str = f'https://pl.wikipedia.org/wiki/{self.location}'
-    #     response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
-    #     return [
-    #         float(response_html.select('.latitude')[1].text.replace(',', '.')),
-    #         float(response_html.select('.longitude')[1].text.replace(',', '.')),
-    #     ]
-    #
 
 class Student: #definicja klasy - uczelnia
     def __init__(self, imie_nazwisko_studenta, grupa, uczelnia_studenta):
@@ -168,8 +165,8 @@ def show_pracownik() -> None:
 
 def remove_pracownik() -> None:
     i = listbox_pracownicy.index(ACTIVE)
-    # print(i)
-    # uczelnie[i].marker.delete()
+    print(i)
+    pracownicy[i].marker.delete()
     pracownicy.pop(i)
     show_pracownik()
 
@@ -196,10 +193,9 @@ def update_pracownik(i):
     pracownicy[i].powiat = powiat
     pracownicy[i].uczelnia = uczelnia
 
-    # uczelnie[i].coordinates = users[i].get_coordinates()
-    # uczelnie[i].marker.delete()
-    # czelnie[i].marker = map_widget.set_marker(uczelnie[i].coordinates[0], uczelnie[i].coordinates[1],
-    #                                         text=f'{uczelnie[i].nazwa}}')
+    pracownicy[i].coordinates = pracownicy[i].get_coordinates()
+    pracownicy[i].marker.delete()
+    pracownicy[i].marker = map_widget.set_marker(pracownicy[i].coordinates[0], pracownicy[i].coordinates[1],text=f'{pracownicy[i].imie_nazwisko_pracownika}', marker_color_circle="green")
 
     show_pracownik()
     button_aktualizuj_pracownicy.configure(text='Aktualizuj', command=edit_pracownik)  # zmiana właściwosci przycisku
@@ -264,7 +260,6 @@ def update_student(i) -> None:
 
     entry_student.focus()
 
-
 def pokaz_uczelnia_na_mapie():
     wojewodztwo_do_wyswietlenia = entry_wojewodztwo_zapytanie.get().strip().lower()
 
@@ -285,7 +280,63 @@ def pokaz_uczelnia_na_mapie():
         map_widget.set_position(filtered[0].coordinates[0], filtered[0].coordinates[1])
         map_widget.set_zoom(10)
 
+def pokaz_wszystkie_uczelnie_na_mapie():
+    # Usuwamy stare markery, jeśli istnieją
+    for uczelnia in uczelnie:
+        if hasattr(uczelnia, 'marker') and uczelnia.marker:
+            uczelnia.marker.delete()
+            uczelnia.marker = None
 
+    # Dodajemy markery dla wszystkich uczelni
+    for uczelnia in uczelnie:
+        uczelnia.marker = map_widget.set_marker(
+            uczelnia.coordinates[0],
+            uczelnia.coordinates[1],
+            text=uczelnia.nazwa
+
+        )
+    map_widget.set_position(52.23, 21.0)
+    map_widget.set_zoom(6)
+
+def pokaz_pracownikow_na_mapie():
+    powiat_do_wyswietlenia = entry_wojewodztwo_zapytanie.get().strip().lower()
+    uczelnia_do_wyswietlenia = entry_uczelnia_zapytanie.get().strip().lower()
+
+    # Usuwamy stare markery
+    for pracownik in pracownicy:
+        if hasattr(pracownik, 'marker') and pracownik.marker:
+            pracownik.marker.delete()
+            pracownik.marker = None
+
+    # Filtrujemy uczelnie i dodajemy marker'y na mapie
+    dopasowani = []
+    for pracownik in pracownicy:
+        if (powiat_do_wyswietlenia in pracownik.powiat.lower() and
+                uczelnia_do_wyswietlenia in pracownik.uczelnia.lower()):
+            pracownik.marker = map_widget.set_marker(pracownik.coordinates[0], pracownik.coordinates[1], text=pracownik.imie_nazwisko_pracownika, marker_color_circle="green")
+            dopasowani.append(pracownik)
+    # Opcjonalnie - ustaw widok mapy na pierwszą uczelnię z filtrowanych
+    if dopasowani:
+        map_widget.set_position(dopasowani[0].coordinates[0], dopasowani[0].coordinates[1])
+        map_widget.set_zoom(10)
+
+def pokaz_wszystkich_pracownikow_na_mapie():
+    # Usuwamy stare markery, jeśli istnieją
+    for pracownik in pracownicy:
+        if hasattr(pracownik, 'marker') and pracownik.marker:
+            pracownik.marker.delete()
+            pracownik.marker = None
+
+    # Dodajemy markery dla wszystkich uczelni
+    for pracownik in pracownicy:
+        pracownik.marker = map_widget.set_marker(
+            pracownik.coordinates[0],
+            pracownik.coordinates[1],
+            text=pracownik.imie_nazwisko_pracownika,
+            marker_color_circle = "green"
+        )
+    map_widget.set_position(52.23, 21.0)
+    map_widget.set_zoom(6)
 
 
 
@@ -351,8 +402,10 @@ button_usun_uczelnie = Button(ramka_uczelnie, text="Usuń", command=remove_uczel
 button_usun_uczelnie.grid(row=4, column=1, sticky="ew")
 button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj", command=edit_uczelnia)
 button_aktualizuj_uczelnie .grid(row=4, column=2, sticky="ew")
-button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa",command=pokaz_uczelnia_na_mapie)
-button_mapa_uczelnie.grid(row=6, column=3, sticky="ew")
+button_pokaz_uczelnie = Button(ramka_uczelnie, text="Pokaż",command=pokaz_uczelnia_na_mapie)
+button_pokaz_uczelnie.grid(row=6, column=3, sticky="ew")
+button_mapa_uczelnie_wszystkie = Button(ramka_uczelnie, text="Mapa", command=pokaz_wszystkie_uczelnie_na_mapie)
+button_mapa_uczelnie_wszystkie.grid(row=4, column=3, sticky="ew")
 
 
 # PRACOWNICY
@@ -371,13 +424,24 @@ Label(ramka_pracownicy, text="Imię i nazwisko:").grid(row=3, column=0, sticky=W
 entry_pracownik = Entry(ramka_pracownicy)
 entry_pracownik.grid(row=3, column=1, columnspan=3, sticky="ew")
 
+Label(ramka_pracownicy, text="Z którego Powiatu wyswietlić?").grid(row=6, column=0, sticky=W)
+entry_powiat_zapytanie = Entry(ramka_pracownicy)
+entry_powiat_zapytanie.grid(row=6, column=1, columnspan=3, sticky="ew")
+
+Label(ramka_pracownicy, text="Z której Uczelni wyswietlić?").grid(row=7, column=0, sticky=W)
+entry_uczelnia_zapytanie = Entry(ramka_pracownicy)
+entry_uczelnia_zapytanie.grid(row=7, column=1, columnspan=3, sticky="ew")
+
 button_dodaj_pracownicy = Button(ramka_pracownicy, text="Dodaj",command=add_pracownik)
 button_dodaj_pracownicy.grid(row=5, column=0, sticky="ew")
 button_usun_pracownicy = Button(ramka_pracownicy, text="Usuń",command=remove_pracownik)
 button_usun_pracownicy.grid(row=5, column=1, sticky="ew")
 button_aktualizuj_pracownicy = Button(ramka_pracownicy, text="Aktualizuj", command=edit_pracownik)
 button_aktualizuj_pracownicy.grid(row=5, column=2, sticky="ew")
-button_mapa_pracownicy = Button(ramka_pracownicy, text="Mapa").grid(row=5, column=3, sticky="ew")
+button_pokaz_pracownikow = Button(ramka_pracownicy, text="Pokaż",command=pokaz_pracownikow_na_mapie)
+button_pokaz_pracownikow.grid(row=8, column=3, sticky="ew")
+button_mapa_pracownicy_wszystkie = Button(ramka_pracownicy, text="Mapa", command=pokaz_wszystkich_pracownikow_na_mapie)
+button_mapa_pracownicy_wszystkie.grid(row=5, column=3, sticky="ew")
 
 # STUDENCI
 listbox_studenci = Listbox(ramka_studenci, width=70, height=8)
