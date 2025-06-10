@@ -1,6 +1,6 @@
 from tkinter import * #do tworzenia roota
 import tkintermapview
-from graphviz.backend.dot_command import command
+
 
 uczelnie: list =[]
 pracownicy: list =[]
@@ -266,18 +266,25 @@ def update_student(i) -> None:
 
 
 def pokaz_uczelnia_na_mapie():
-    wojewodztwo_wpisane = entry_wojewodztwo_zapytanie.get().strip().lower()
-    if not wojewodztwo_wpisane:
-        return
+    wojewodztwo_do_wyswietlenia = entry_wojewodztwo_zapytanie.get().strip().lower()
 
+    # Usuwamy stare markery
     for uczelnia in uczelnie:
-        # Sprawdź, czy wojewodztwo uczelni zgadza się (ignorując wielkość liter)
-        if uczelnia.wojewodztwo.lower() == wojewodztwo_wpisane:
-            # Zmień kolor markera na czerwony (lub inny wyróżniający)
-            uczelnia.marker.set_marker_color("red")
-        else:
-            # Przywróć domyślny kolor (niebieski)
-            uczelnia.marker.set_marker_color("blue")
+        if hasattr(uczelnia, 'marker') and uczelnia.marker:
+            uczelnia.marker.delete()
+            uczelnia.marker = None
+
+    # Filtrujemy uczelnie i dodajemy marker'y na mapie
+    for uczelnia in uczelnie:
+        if uczelnia.wojewodztwo.lower() == wojewodztwo_do_wyswietlenia:
+            uczelnia.marker = map_widget.set_marker(uczelnia.coordinates[0], uczelnia.coordinates[1], text=uczelnia.nazwa)
+
+    # Opcjonalnie - ustaw widok mapy na pierwszą uczelnię z filtrowanych
+    filtered = [u for u in uczelnie if u.wojewodztwo.lower() == wojewodztwo_do_wyswietlenia]
+    if filtered:
+        map_widget.set_position(filtered[0].coordinates[0], filtered[0].coordinates[1])
+        map_widget.set_zoom(10)
+
 
 
 
@@ -346,6 +353,7 @@ button_aktualizuj_uczelnie = Button(ramka_uczelnie, text="Aktualizuj", command=e
 button_aktualizuj_uczelnie .grid(row=4, column=2, sticky="ew")
 button_mapa_uczelnie = Button(ramka_uczelnie, text="Mapa",command=pokaz_uczelnia_na_mapie)
 button_mapa_uczelnie.grid(row=6, column=3, sticky="ew")
+
 
 # PRACOWNICY
 listbox_pracownicy = Listbox(ramka_pracownicy, width=70, height=8)
