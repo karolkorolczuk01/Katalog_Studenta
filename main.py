@@ -49,20 +49,19 @@ class Student: #definicja klasy - uczelnia
         self.grupa = grupa
         self.uczelnia_studenta = uczelnia_studenta
 
-        #self.coordinates = self.get_coordinates()
-        #self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1],
-        #                                   text=f'{self.nazwa})
+        self.coordinates = self.get_coordinates()
+        self.marker = map_widget.set_marker(self.coordinates[0], self.coordinates[1], text=f'{self.imie_nazwisko_studenta}',marker_color_circle="yellow")
 
-    # def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
-    #     import requests
-    #     from bs4 import BeautifulSoup
-    #     adres_url: str = f'https://pl.wikipedia.org/wiki/{self.location}'
-    #     response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
-    #     return [
-    #         float(response_html.select('.latitude')[1].text.replace(',', '.')),
-    #         float(response_html.select('.longitude')[1].text.replace(',', '.')),
-    #     ]
-    #
+    def get_coordinates(self) -> list:  # funkcja wewnątrz klasy to metoda
+         import requests
+         from bs4 import BeautifulSoup
+         adres_url: str = f'https://pl.wikipedia.org/wiki/{self.uczelnia_studenta}'
+         response_html = BeautifulSoup(requests.get(adres_url).text, 'html.parser')
+         return [
+             float(response_html.select('.latitude')[1].text.replace(',', '.')),
+             float(response_html.select('.longitude')[1].text.replace(',', '.')),
+         ]
+
 
 
 
@@ -83,8 +82,7 @@ def zaloguj():
     else:
         entry_login.delete(0, END)
         entry_haslo.delete(0, END)
-        Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz pon ownie", fg="red").grid(row=1, column=0,
-                                                                                             columnspan=5)
+        Label(ramka_logowanie, text="Błędny login lub hasło. Wpisz ponownie", fg="red").grid(row=1, column=0, columnspan=5)
 
 def add_uczelnia() -> None:
     nazwa = entry_nazwa_uczelni.get()
@@ -229,6 +227,8 @@ def show_students() -> None:
 
 def remove_student() -> None:
     i = listbox_studenci.index(ACTIVE)
+    print(i)
+    studenci[i].marker.delete()
     studenci.pop(i)
     show_students()
 
@@ -250,6 +250,10 @@ def update_student(i) -> None:
     studenci[i].imie_nazwisko_studenta = imie_nazwisko
     studenci[i].grupa = grupa
     studenci[i].uczelnia_studenta = uczelnia
+
+    studenci[i].coordinates = studenci[i].get_coordinates()
+    studenci[i].marker.delete()
+    studenci[i].marker = map_widget.set_marker(studenci[i].coordinates[0], studenci[i].coordinates[1],text=f'{studenci[i].imie_nazwisko_studenta}', marker_color_circle="yellow")
 
     show_students()
     button_aktualizuj_studenci.configure(text='Aktualizuj', command=edit_student)
@@ -299,7 +303,7 @@ def pokaz_wszystkie_uczelnie_na_mapie():
     map_widget.set_zoom(6)
 
 def pokaz_pracownikow_na_mapie():
-    powiat_do_wyswietlenia = entry_wojewodztwo_zapytanie.get().strip().lower()
+    powiat_do_wyswietlenia = entry_powiat_zapytanie.get().strip().lower()
     uczelnia_do_wyswietlenia = entry_uczelnia_zapytanie.get().strip().lower()
 
     # Usuwamy stare markery
@@ -334,6 +338,46 @@ def pokaz_wszystkich_pracownikow_na_mapie():
             pracownik.coordinates[1],
             text=pracownik.imie_nazwisko_pracownika,
             marker_color_circle = "green"
+        )
+    map_widget.set_position(52.23, 21.0)
+    map_widget.set_zoom(6)
+
+def pokaz_studentow_na_mapie():
+    grupa_do_wyswietlenia = entry_grupa_zapytanie.get().strip().lower()
+    uczelnia_do_wyswietlenia_studenci = entry_uczelnia_studenci_zapytanie.get().strip().lower()
+
+    # Usuwamy stare markery
+    for student in studenci:
+        if hasattr(student, 'marker') and student.marker:
+            student.marker.delete()
+            student.marker = None
+
+    # Filtrujemy uczelnie i dodajemy marker'y na mapie
+    dopasowani = []
+    for student in studenci:
+        if (grupa_do_wyswietlenia in student.grupa.lower() and
+                uczelnia_do_wyswietlenia_studenci in student.uczelnia_studenta.lower()):
+            student.marker = map_widget.set_marker(student.coordinates[0], student.coordinates[1], text=student.imie_nazwisko_studenta, marker_color_circle="yellow")
+            dopasowani.append(student)
+    # Opcjonalnie - ustaw widok mapy na pierwszą uczelnię z filtrowanych
+    if dopasowani:
+        map_widget.set_position(dopasowani[0].coordinates[0], dopasowani[0].coordinates[1])
+        map_widget.set_zoom(10)
+
+def pokaz_wszystkich_studentow_na_mapie():
+    # Usuwamy stare markery, jeśli istnieją
+    for student in studenci:
+        if hasattr(student, 'marker') and student.marker:
+            student.marker.delete()
+            student.marker = None
+
+    # Dodajemy markery dla wszystkich uczelni
+    for student in studenci:
+        student.marker = map_widget.set_marker(
+            student.coordinates[0],
+            student.coordinates[1],
+            text=student.imie_nazwisko_studenta,
+            marker_color_circle = "yellow"
         )
     map_widget.set_position(52.23, 21.0)
     map_widget.set_zoom(6)
@@ -424,11 +468,11 @@ Label(ramka_pracownicy, text="Imię i nazwisko:").grid(row=3, column=0, sticky=W
 entry_pracownik = Entry(ramka_pracownicy)
 entry_pracownik.grid(row=3, column=1, columnspan=3, sticky="ew")
 
-Label(ramka_pracownicy, text="Z którego Powiatu wyswietlić?").grid(row=6, column=0, sticky=W)
+Label(ramka_pracownicy, text="Z którego powiatu wyswietlić?").grid(row=6, column=0, sticky=W)
 entry_powiat_zapytanie = Entry(ramka_pracownicy)
 entry_powiat_zapytanie.grid(row=6, column=1, columnspan=3, sticky="ew")
 
-Label(ramka_pracownicy, text="Z której Uczelni wyswietlić?").grid(row=7, column=0, sticky=W)
+Label(ramka_pracownicy, text="Z której uczelni wyswietlić?").grid(row=7, column=0, sticky=W)
 entry_uczelnia_zapytanie = Entry(ramka_pracownicy)
 entry_uczelnia_zapytanie.grid(row=7, column=1, columnspan=3, sticky="ew")
 
@@ -459,16 +503,27 @@ Label(ramka_studenci, text="Imię i nazwisko:").grid(row=3, column=0, sticky=W)
 entry_student = Entry(ramka_studenci)
 entry_student.grid(row=3, column=1, columnspan=3, sticky="ew")
 
+Label(ramka_studenci, text="Z którego grupy wyswietlić?").grid(row=6, column=0, sticky=W)
+entry_grupa_zapytanie = Entry(ramka_studenci)
+entry_grupa_zapytanie.grid(row=6, column=1, columnspan=3, sticky="ew")
+
+Label(ramka_studenci, text="Z której uczelni wyswietlić?").grid(row=7, column=0, sticky=W)
+entry_uczelnia_studenci_zapytanie = Entry(ramka_studenci)
+entry_uczelnia_studenci_zapytanie.grid(row=7, column=1, columnspan=3, sticky="ew")
+
+
 button_dodaj_studenci = Button(ramka_studenci, text="Dodaj", command=add_student)
 button_dodaj_studenci.grid(row=4, column=0, sticky="ew")
 button_usun_studenci = Button(ramka_studenci, text="Usuń", command=remove_student)
 button_usun_studenci.grid(row=4, column=1, sticky="ew")
 button_aktualizuj_studenci = Button(ramka_studenci, text="Aktualizuj", command=edit_student)
 button_aktualizuj_studenci.grid(row=4, column=2, sticky="ew")
-button_mapa_studenci = Button(ramka_studenci, text="Mapa").grid(row=4, column=3, sticky="ew")
+button_pokaz_studentow = Button(ramka_studenci, text="Pokaż", command = pokaz_studentow_na_mapie)
+button_pokaz_studentow.grid(row=8, column=3, sticky="ew")
+button_mapa_studenci_wszystkie = Button(ramka_studenci, text="Mapa", command = pokaz_wszystkich_studentow_na_mapie)
+button_mapa_studenci_wszystkie.grid(row=4, column=3, sticky="ew")
 
 # MAPA
-
 
 map_widget = tkintermapview.TkinterMapView(ramka_mapa, width=1400, height=450, corner_radius=0)
 map_widget.grid(row=0, column=0, columnspan=2)
